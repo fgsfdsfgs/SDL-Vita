@@ -242,24 +242,19 @@ VITA_CreateWindow(_THIS, SDL_Window * window)
     window->driverdata = wdata;
 
     // Vita can only have one window
-    if (Vita_Window != NULL)
-    {
-        // Replace this with something else
-        return SDL_OutOfMemory();
+    if (Vita_Window != NULL) {
+        return SDL_SetError("Vita only supports one window");
     }
 
 #ifdef SDL_VIDEO_OPENGL_EGL
-    if (window->flags & SDL_WINDOW_OPENGL)
-    {
-        if (!_this->egl_data)
-        {
+    if (window->flags & SDL_WINDOW_OPENGL) {
+        if (!_this->egl_data) {
             if (SDL_GL_LoadLibrary(NULL) < 0)
                 return -1;
         }
 
         wdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) VITA_WINDOW_960X544);
-        if (wdata->egl_surface == EGL_NO_SURFACE)
-        {
+        if (wdata->egl_surface == EGL_NO_SURFACE) {
             return SDL_SetError("Could not create GLES window surface");
         }
     }
@@ -323,11 +318,25 @@ VITA_RestoreWindow(_THIS, SDL_Window * window)
 void
 VITA_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
 {
-
 }
+
 void
 VITA_DestroyWindow(_THIS, SDL_Window * window)
 {
+    if (window == Vita_Window) {
+        Vita_Window = NULL;
+        if (window->driverdata) {
+#ifdef SDL_VIDEO_OPENGL_EGL
+            SDL_WindowData *wdata = (SDL_WindowData *) window->driverdata;
+            if (wdata->egl_surface != EGL_NO_SURFACE) {
+                SDL_EGL_DestroySurface(_this, wdata->egl_surface);
+                wdata->egl_surface = EGL_NO_SURFACE;
+            }
+#endif
+            SDL_free(window->driverdata);
+            window->driverdata = NULL;
+        }
+    }
 }
 
 /*****************************************************************************/
@@ -369,7 +378,7 @@ void VITA_PumpEvents(_THIS)
 {
     VITA_PollTouch();
     VITA_PollKeyboard();
-	VITA_PollMouse();
+    VITA_PollMouse();
 }
 
 #endif /* SDL_VIDEO_DRIVER_VITA */
