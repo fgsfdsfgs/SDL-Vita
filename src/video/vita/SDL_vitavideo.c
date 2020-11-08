@@ -232,6 +232,11 @@ VITA_CreateWindow(_THIS, SDL_Window * window)
 {
     SDL_WindowData *wdata;
 
+    // Vita can only have one window
+    if (Vita_Window != NULL) {
+        return SDL_SetError("Vita only supports one window");
+    }
+
     /* Allocate window internal data */
     wdata = (SDL_WindowData *) SDL_calloc(1, sizeof(SDL_WindowData));
     if (wdata == NULL) {
@@ -240,11 +245,6 @@ VITA_CreateWindow(_THIS, SDL_Window * window)
 
     /* Setup driver data for this window */
     window->driverdata = wdata;
-
-    // Vita can only have one window
-    if (Vita_Window != NULL) {
-        return SDL_SetError("Vita only supports one window");
-    }
 
 #ifdef SDL_VIDEO_OPENGL_EGL
     if (window->flags & SDL_WINDOW_OPENGL) {
