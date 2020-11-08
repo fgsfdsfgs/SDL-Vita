@@ -25,11 +25,16 @@
 #include "../../SDL_internal.h"
 #include "../SDL_sysvideo.h"
 
+#if SDL_VIDEO_OPENGL_EGL
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#endif
+
 typedef struct SDL_VideoData
 {
-	SDL_bool gl_initialized;   /* OpenGL device initialization status */
-	uint32_t gl_refcount;      /* OpenGL reference count              */
-
+    SDL_bool gl_initialized;   /* OpenGL device initialization status */
+    uint32_t gl_refcount;      /* OpenGL reference count              */
 } SDL_VideoData;
 
 
@@ -42,7 +47,9 @@ typedef struct SDL_DisplayData
 typedef struct SDL_WindowData
 {
     SDL_bool uses_gl;			/* if true window must support OpenGL */
-
+#if SDL_VIDEO_OPENGL_EGL  
+    EGLSurface egl_surface;
+#endif    
 } SDL_WindowData;
 
 extern SDL_Window * Vita_Window;
@@ -87,6 +94,19 @@ int VITA_GL_SetSwapInterval(_THIS, int interval);
 int VITA_GL_GetSwapInterval(_THIS);
 int VITA_GL_SwapWindow(_THIS, SDL_Window * window);
 void VITA_GL_DeleteContext(_THIS, SDL_GLContext context);
+#endif
+
+#if SDL_VIDEO_OPENGL_EGL
+/* OpenGL/OpenGL ES functions */
+int VITA_GLES_LoadLibrary(_THIS, const char *path);
+void *VITA_GLES_GetProcAddress(_THIS, const char *proc);
+void VITA_GLES_UnloadLibrary(_THIS);
+SDL_GLContext VITA_GLES_CreateContext(_THIS, SDL_Window * window);
+int VITA_GLES_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context);
+int VITA_GLES_SetSwapInterval(_THIS, int interval);
+int VITA_GLES_GetSwapInterval(_THIS);
+int VITA_GLES_SwapWindow(_THIS, SDL_Window * window);
+void VITA_GLES_DeleteContext(_THIS, SDL_GLContext context);
 #endif
 
 /* VITA on screen keyboard */

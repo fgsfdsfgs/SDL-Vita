@@ -29,6 +29,10 @@
 
 #include "SDL_opengles2.h"
 
+#if defined(__vita__) || defined(__VITA__)
+unsigned int sceLibcHeapSize = 8 * 1024 * 1024;
+#endif
+
 typedef struct GLES2_Context
 {
 #define SDL_PROC(ret,func,params) ret (APIENTRY *func) params;
@@ -344,6 +348,27 @@ const float _colors[] =
     1.0, 0.0, 1.0, /* magenta */
 };
 
+#if defined(__vita__) || defined(__VITA__)
+
+const char* _shader_vert_src = 
+" void main( "
+"    float4 av4position, "
+"    float3 av3color, "
+"    uniform float4x4 mvp, "
+"    out float4 vv4position : POSITION, "
+"    out float3 vv3color : COLOR "
+" ) { "
+"    vv4position = mul(av4position, mvp); "
+"    vv3color = av3color; "
+" } ";
+
+const char* _shader_frag_src = 
+" float4 main(float3 vv3color : COLOR) { "
+"    return float4(vv3color, 1.0); "
+" } ";
+
+#else
+
 const char* _shader_vert_src = 
 " attribute vec4 av4position; "
 " attribute vec3 av3color; "
@@ -360,6 +385,8 @@ const char* _shader_frag_src =
 " void main() { "
 "    gl_FragColor = vec4(vv3color, 1.0); "
 " } ";
+
+#endif
 
 typedef struct shader_data
 {

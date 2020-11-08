@@ -122,6 +122,7 @@
 #define HAVE_LOG10F 1
 /* #define HAVE_SYSCONF  1 */
 /* #define HAVE_SIGACTION    1 */
+#define HAVE_OPENGLES2 1
 
 
 /* VITA isn't that sophisticated */
@@ -142,16 +143,15 @@
 /* VITA video driver */
 #define SDL_VIDEO_DRIVER_VITA   1
 
-/* VITA osmesa/gl driver */
-// uncomment next line to enable osmesa/gl support
-//#define SDL_VIDEO_DRIVER_VITA_GL 1
-#ifdef SDL_VIDEO_DRIVER_VITA_GL
-#define HAVE_OPENGL 1
-#define SDL_VIDEO_OPENGL 1
-#endif
+/* VITA pib/gles2 driver */
+#define SDL_VIDEO_OPENGL_ES2 1
+#define SDL_VIDEO_OPENGL_EGL 1
 
 /* VITA render driver */
 #define SDL_VIDEO_RENDER_VITA   1
+
+/* GLES render driver */
+#define SDL_VIDEO_RENDER_OGL_ES2 1
 
 #define SDL_POWER_VITA          1
 

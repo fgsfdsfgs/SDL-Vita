@@ -28,6 +28,9 @@
 #if SDL_VIDEO_DRIVER_ANDROID
 #include <android/native_window.h>
 #endif
+#if SDL_VIDEO_DRIVER_VITA
+#include <pib.h>
+#endif
 
 #include "SDL_sysvideo.h"
 #include "SDL_log.h"
@@ -81,7 +84,7 @@
 #define DEFAULT_OGL_ES "libGLESv1_CM.so.1"
 #endif /* SDL_VIDEO_DRIVER_RPI */
 
-#ifdef SDL_VIDEO_STATIC_ANGLE
+#if defined(SDL_VIDEO_STATIC_ANGLE) || defined(SDL_VIDEO_DRIVER_VITA)
 #define LOAD_FUNC(NAME) \
 _this->egl_data->NAME = (void *)NAME;
 #else
@@ -210,7 +213,7 @@ void *
 SDL_EGL_GetProcAddress(_THIS, const char *proc)
 {
     static char procname[1024];
-    void *retval;
+    void *retval = NULL;
     
     /* eglGetProcAddress is busted on Android http://code.google.com/p/android/issues/detail?id=7681 */
 #if !defined(SDL_VIDEO_DRIVER_ANDROID)
@@ -221,13 +224,16 @@ SDL_EGL_GetProcAddress(_THIS, const char *proc)
         }
     }
 #endif
-    
+
+#if !defined(SDL_VIDEO_DRIVER_VITA)
     retval = SDL_LoadFunction(_this->egl_data->egl_dll_handle, proc);
     if (!retval && SDL_strlen(proc) <= 1022) {
         procname[0] = '_';
         SDL_strlcpy(procname + 1, proc, 1022);
         retval = SDL_LoadFunction(_this->egl_data->egl_dll_handle, procname);
     }
+#endif
+
     return retval;
 }
 
@@ -241,16 +247,24 @@ SDL_EGL_UnloadLibrary(_THIS)
         }
 
         if (_this->egl_data->dll_handle) {
+#if !defined(SDL_VIDEO_DRIVER_VITA)
             SDL_UnloadObject(_this->egl_data->dll_handle);
+#endif
             _this->egl_data->dll_handle = NULL;
         }
         if (_this->egl_data->egl_dll_handle) {
+#if !defined(SDL_VIDEO_DRIVER_VITA)
             SDL_UnloadObject(_this->egl_data->egl_dll_handle);
+#endif
             _this->egl_data->egl_dll_handle = NULL;
         }
         
         SDL_free(_this->egl_data);
         _this->egl_data = NULL;
+        
+#ifdef SDL_VIDEO_DRIVER_VITA
+        pibTerm();
+#endif
     }
 }
 
@@ -259,7 +273,7 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
 {
     void *dll_handle = NULL, *egl_dll_handle = NULL; /* The naming is counter intuitive, but hey, I just work here -- Gabriel */
     const char *path = NULL;
-    int egl_version_major = 0, egl_version_minor = 0;
+    int egl_version_major = 0, egl_version_minor = 0, ret;
 #if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT
     const char *d3dcompiler;
 #endif
@@ -292,7 +306,7 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
     }
 #endif
 
-#ifndef SDL_VIDEO_STATIC_ANGLE
+#if !defined(SDL_VIDEO_STATIC_ANGLE) && !defined(SDL_VIDEO_DRIVER_VITA)
     /* A funny thing, loading EGL.so first does not work on the Raspberry, so we load libGL* first */
     path = SDL_getenv("SDL_VIDEO_GL_DRIVER");
     if (path != NULL) {
@@ -371,6 +385,13 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
     }
 #endif
 
+#ifdef SDL_VIDEO_DRIVER_VITA
+    if ((ret = pibInit(PIB_SHACCCG | PIB_GET_PROC_ADDR_CORE)) != 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_VIDEO, "pibInit() returned %d", ret);
+        return SDL_SetError("Could not initialize PIB");
+    }
+#endif
+
     _this->egl_data->dll_handle = dll_handle;
 
     /* Load new function pointers */
@@ -406,19 +427,21 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
         }
     }
 
+#if !defined(SDL_VIDEO_DRIVER_VITA)
     if (egl_version_major == 1 && egl_version_minor == 5) {
         LOAD_FUNC(eglGetPlatformDisplay);
     }
+#endif
 
     _this->egl_data->egl_display = EGL_NO_DISPLAY;
 #if !defined(__WINRT__)
     if (platform) {
-        if (egl_version_major == 1 && egl_version_minor == 5) {
+        if (egl_version_major == 1 && egl_version_minor == 5 && _this->egl_data->eglGetPlatformDisplay) {
             _this->egl_data->egl_display = _this->egl_data->eglGetPlatformDisplay(platform, (void *)(size_t)native_display, NULL);
         } else {
             if (SDL_EGL_HasExtension(_this, SDL_EGL_CLIENT_EXTENSION, "EGL_EXT_platform_base")) {
                 _this->egl_data->eglGetPlatformDisplayEXT = SDL_EGL_GetProcAddress(_this, "eglGetPlatformDisplayEXT");
-                if (_this->egl_data->eglGetPlatformDisplayEXT) {
+                if (_this->egl_data->eglGetPlatformDisplayEXT && _this->egl_data->eglGetPlatformDisplayEXT) {
                     _this->egl_data->egl_display = _this->egl_data->eglGetPlatformDisplayEXT(platform, (void *)(size_t)native_display, NULL);
                 }
             }

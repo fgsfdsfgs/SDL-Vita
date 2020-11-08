@@ -1,6 +1,6 @@
 # SDL port by xerpi
 
-TARGET_LIB = libSDL2.a
+TARGET_LIB = libSDL2_pib.a
 OBJS= src/SDL.o \
       src/SDL_assert.o \
       src/SDL_dataqueue.o \
@@ -77,21 +77,23 @@ OBJS= src/SDL.o \
       src/video/SDL_surface.o \
       src/video/SDL_video.o \
       src/video/SDL_yuv.o \
+      src/video/SDL_egl.o \
       src/video/yuv2rgb/yuv_rgb.o \
       src/video/vita/SDL_vitavideo.o \
       src/video/vita/SDL_vitagl.o \
+      src/video/vita/SDL_vitaopengles.o \
       src/video/vita/SDL_vitamouse.o \
       src/video/vita/SDL_vitatouch.o \
       src/video/vita/SDL_vitakeyboard.o \
-      #src/render/opengl/SDL_render_gl.o \
-      #src/render/opengl/SDL_shaders_gl.o \
+      src/render/opengles2/SDL_render_gles2.o \
+      src/render/opengles2/SDL_shaders_gles2_cg.o
 
 PREFIX  = arm-vita-eabi
 CC      = $(PREFIX)-gcc
 AR      = $(PREFIX)-ar
 CFLAGS  = -g -Wl,-q -Wall -O3 -Iinclude \
 			-D__VITA__ -D__ARM_ARCH=7 -D__ARM_ARCH_7A__ \
-			-mfpu=neon -mcpu=cortex-a9 -march=armv7-a -mfloat-abi=hard
+			-mfpu=neon -mtune=cortex-a9 -march=armv7-a -mfloat-abi=hard
 ASFLAGS = $(CFLAGS)
 
 $(TARGET_LIB): $(OBJS)
