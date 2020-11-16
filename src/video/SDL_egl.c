@@ -415,6 +415,7 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
     LOAD_FUNC(eglQueryString);
     LOAD_FUNC(eglGetError);
 
+#if !defined(SDL_VIDEO_DRIVER_VITA)
     if (_this->egl_data->eglQueryString) {
         /* EGL 1.5 allows querying for client version */
         const char *egl_version = _this->egl_data->eglQueryString(EGL_NO_DISPLAY, EGL_VERSION);
@@ -426,6 +427,11 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
             }
         }
     }
+#else
+    // we know this ahead of time; EGL1.4 does not support EGL_NO_DISPLAY in eglQueryString
+    egl_version_major = 1;
+    egl_version_minor = 4;
+#endif
 
 #if !defined(SDL_VIDEO_DRIVER_VITA)
     if (egl_version_major == 1 && egl_version_minor == 5) {
