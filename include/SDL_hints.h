@@ -892,6 +892,27 @@ extern "C" {
 #define SDL_HINT_OPENGL_ES_DRIVER   "SDL_OPENGL_ES_DRIVER"
 
 /**
+ *  \brief  Tell SDL what to use for the gpu_pool_size arg in vglInitExtended().
+ *
+ *  Defaults to "0x800000".
+ */
+#define SDL_HINT_VITAGL_GPU_POOL_SIZE   "SDL_VITAGL_GPU_POOL_SIZE"
+
+/**
+ *  \brief  Tell SDL what to use for the ram_threshold arg in vglInitExtended().
+ *
+ *  Defaults to "0x1000000".
+ */
+#define SDL_HINT_VITAGL_RAM_THRESHOLD   "SDL_VITAGL_RAM_THRESHOLD"
+
+/**
+ *  \brief  Tell SDL whether to enable vglUseVram().
+ *
+ *  Defaults to "1".
+ */
+#define SDL_HINT_VITAGL_USE_VRAM   "SDL_VITAGL_USE_VRAM"
+
+/**
  *  \brief  A variable controlling speed/quality tradeoff of audio resampling.
  *
  *  If available, SDL can use libsamplerate ( http://www.mega-nerd.com/SRC/ )

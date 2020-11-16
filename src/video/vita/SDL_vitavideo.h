@@ -109,6 +109,19 @@ int VITA_GLES_SwapWindow(_THIS, SDL_Window * window);
 void VITA_GLES_DeleteContext(_THIS, SDL_GLContext context);
 #endif
 
+#if SDL_VIDEO_OPENGL_VITAGL
+/* vitaGL functions */
+int VITA_VGL_LoadLibrary(_THIS, const char *path);
+void *VITA_VGL_GetProcAddress(_THIS, const char *proc);
+void VITA_VGL_UnloadLibrary(_THIS);
+SDL_GLContext VITA_VGL_CreateContext(_THIS, SDL_Window * window);
+int VITA_VGL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context);
+int VITA_VGL_SetSwapInterval(_THIS, int interval);
+int VITA_VGL_GetSwapInterval(_THIS);
+int VITA_VGL_SwapWindow(_THIS, SDL_Window * window);
+void VITA_VGL_DeleteContext(_THIS, SDL_GLContext context);
+#endif
+
 /* VITA on screen keyboard */
 SDL_bool VITA_HasScreenKeyboardSupport(_THIS);
 void VITA_ShowScreenKeyboard(_THIS, SDL_Window *window);

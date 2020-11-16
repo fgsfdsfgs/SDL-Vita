@@ -43,6 +43,9 @@
 #if SDL_VIDEO_OPENGL_EGL
 #include "SDL_vitaopengles.h"
 #endif
+#if SDL_VIDEO_OPENGL_VITAGL
+#include "SDL_vitaopenglvgl.h"
+#endif
 
 SDL_Window *Vita_Window;
 
@@ -70,7 +73,7 @@ VITA_Create()
 {
     SDL_VideoDevice *device;
     SDL_VideoData *phdata;
-#if SDL_VIDEO_DRIVER_VITA_GL
+#if SDL_VIDEO_DRIVER_VITA_GL || SDL_VIDEO_OPENGL_VITAGL
     SDL_GLDriverData *gldata;
 #endif
     int status;
@@ -97,7 +100,7 @@ VITA_Create()
         return NULL;
     }
 
-#if SDL_VIDEO_DRIVER_VITA_GL
+#if SDL_VIDEO_DRIVER_VITA_GL || SDL_VIDEO_OPENGL_VITAGL
     gldata = (SDL_GLDriverData *) SDL_calloc(1, sizeof(SDL_GLDriverData));
     if (gldata == NULL) {
         SDL_OutOfMemory();
@@ -147,6 +150,16 @@ VITA_Create()
     device->GL_GetSwapInterval = VITA_GL_GetSwapInterval;
     device->GL_SwapWindow = VITA_GL_SwapWindow;
     device->GL_DeleteContext = VITA_GL_DeleteContext;
+#elif SDL_VIDEO_OPENGL_VITAGL
+    device->GL_LoadLibrary = VITA_VGL_LoadLibrary;
+    device->GL_GetProcAddress = VITA_VGL_GetProcAddress;
+    device->GL_UnloadLibrary = VITA_VGL_UnloadLibrary;
+    device->GL_CreateContext = VITA_VGL_CreateContext;
+    device->GL_MakeCurrent = VITA_VGL_MakeCurrent;
+    device->GL_SetSwapInterval = VITA_VGL_SetSwapInterval;
+    device->GL_GetSwapInterval = VITA_VGL_GetSwapInterval;
+    device->GL_SwapWindow = VITA_VGL_SwapWindow;
+    device->GL_DeleteContext = VITA_VGL_DeleteContext;
 #elif SDL_VIDEO_OPENGL_EGL
     device->GL_LoadLibrary = VITA_GLES_LoadLibrary;
     device->GL_GetProcAddress = VITA_GLES_GetProcAddress;
@@ -164,7 +177,7 @@ VITA_Create()
     device->HideScreenKeyboard = VITA_HideScreenKeyboard;
     device->IsScreenKeyboardShown = VITA_IsScreenKeyboardShown;
 
-	device->PumpEvents = VITA_PumpEvents;
+    device->PumpEvents = VITA_PumpEvents;
 
     return device;
 }
@@ -246,13 +259,12 @@ VITA_CreateWindow(_THIS, SDL_Window * window)
     /* Setup driver data for this window */
     window->driverdata = wdata;
 
-#ifdef SDL_VIDEO_OPENGL_EGL
+#if SDL_VIDEO_OPENGL_EGL
     if (window->flags & SDL_WINDOW_OPENGL) {
         if (!_this->egl_data) {
             if (SDL_GL_LoadLibrary(NULL) < 0)
                 return -1;
         }
-
         wdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) VITA_WINDOW_960X544);
         if (wdata->egl_surface == EGL_NO_SURFACE) {
             return SDL_SetError("Could not create GLES window surface");

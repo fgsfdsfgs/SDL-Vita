@@ -122,7 +122,7 @@
 #define HAVE_LOG10F 1
 /* #define HAVE_SYSCONF  1 */
 /* #define HAVE_SIGACTION    1 */
-#define HAVE_OPENGLES2 1
+
 
 
 /* VITA isn't that sophisticated */
@@ -143,15 +143,22 @@
 /* VITA video driver */
 #define SDL_VIDEO_DRIVER_VITA   1
 
-/* VITA pib/gles2 driver */
-#define SDL_VIDEO_OPENGL_ES2 1
-#define SDL_VIDEO_OPENGL_EGL 1
-
 /* VITA render driver */
 #define SDL_VIDEO_RENDER_VITA   1
 
+#ifdef ENABLE_GLES2
 /* GLES render driver */
 #define SDL_VIDEO_RENDER_OGL_ES2 1
+/* VITA pib/gles2 driver */
+#define SDL_VIDEO_OPENGL_ES2 1
+#define SDL_VIDEO_OPENGL_EGL 1
+#define HAVE_OPENGLES2 1
+#elif defined(ENABLE_VGL)
+/* VITA vitaGL driver */
+#define SDL_VIDEO_OPENGL 1
+#define SDL_VIDEO_OPENGL_VITAGL 1
+#define HAVE_OPENGL 1
+#endif
 
 #define SDL_POWER_VITA          1
 

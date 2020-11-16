@@ -1,6 +1,16 @@
 # SDL port by xerpi
 
-TARGET_LIB = libSDL2_pib.a
+ENABLE_GLES ?= 0
+ENABLE_VGL ?= 0
+
+ifeq ($(ENABLE_GLES),1)
+  TARGET_LIB := libSDL2_pib.a
+else ifeq ($(ENABLE_VGL),1)
+  TARGET_LIB := libSDL2_vgl.a
+else
+  TARGET_LIB := libSDL2.a
+endif
+
 OBJS= src/SDL.o \
       src/SDL_assert.o \
       src/SDL_dataqueue.o \
@@ -77,22 +87,38 @@ OBJS= src/SDL.o \
       src/video/SDL_surface.o \
       src/video/SDL_video.o \
       src/video/SDL_yuv.o \
-      src/video/SDL_egl.o \
       src/video/yuv2rgb/yuv_rgb.o \
       src/video/vita/SDL_vitavideo.o \
       src/video/vita/SDL_vitagl.o \
-      src/video/vita/SDL_vitaopengles.o \
       src/video/vita/SDL_vitamouse.o \
       src/video/vita/SDL_vitatouch.o \
-      src/video/vita/SDL_vitakeyboard.o \
+      src/video/vita/SDL_vitakeyboard.o
+
+OBJS_GLES := \
+      src/video/SDL_egl.o \
+      src/video/vita/SDL_vitaopengles.o \
       src/render/opengles2/SDL_render_gles2.o \
       src/render/opengles2/SDL_shaders_gles2_cg.o
+
+OBJS_VGL := \
+      src/video/vita/SDL_vitaopenglvgl.o
+
+GLFLAGS :=
+
+ifeq ($(ENABLE_GLES),1)
+  OBJS += $(OBJS_GLES)
+  GLFLAGS += -DENABLE_GLES
+endif
+ifeq ($(ENABLE_VGL),1)
+  OBJS += $(OBJS_VGL)
+  GLFLAGS += -DENABLE_VGL
+endif
 
 PREFIX  = arm-vita-eabi
 CC      = $(PREFIX)-gcc
 AR      = $(PREFIX)-ar
 CFLAGS  = -g -Wl,-q -Wall -O3 -Iinclude \
-			-D__VITA__ -D__ARM_ARCH=7 -D__ARM_ARCH_7A__ \
+			-D__VITA__ -D__ARM_ARCH=7 -D__ARM_ARCH_7A__ $(GLFLAGS) \
 			-mfpu=neon -mtune=cortex-a9 -march=armv7-a -mfloat-abi=hard
 ASFLAGS = $(CFLAGS)
 
@@ -100,7 +126,7 @@ $(TARGET_LIB): $(OBJS)
 	$(AR) rcs $@ $^
 
 clean:
-	@rm -rf $(TARGET_LIB) $(OBJS)
+	@rm -rf $(TARGET_LIB) $(OBJS) $(OBJS_GLES) $(OBJS_VGL)
 
 install: $(TARGET_LIB)
 	@cp  $(TARGET_LIB) $(VITASDK)/arm-vita-eabi/lib
