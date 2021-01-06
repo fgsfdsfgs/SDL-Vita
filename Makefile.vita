@@ -1,9 +1,9 @@
 # SDL port by xerpi
 
-ENABLE_GLES ?= 0
+ENABLE_GLES2 ?= 0
 ENABLE_VGL ?= 0
 
-ifeq ($(ENABLE_GLES),1)
+ifeq ($(ENABLE_GLES2),1)
   TARGET_LIB := libSDL2_pib.a
 else ifeq ($(ENABLE_VGL),1)
   TARGET_LIB := libSDL2_vgl.a
@@ -105,9 +105,9 @@ OBJS_VGL := \
 
 GLFLAGS :=
 
-ifeq ($(ENABLE_GLES),1)
+ifeq ($(ENABLE_GLES2),1)
   OBJS += $(OBJS_GLES)
-  GLFLAGS += -DENABLE_GLES
+  GLFLAGS += -DENABLE_GLES2
 endif
 ifeq ($(ENABLE_VGL),1)
   OBJS += $(OBJS_VGL)
