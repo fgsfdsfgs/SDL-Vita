@@ -38,21 +38,21 @@ static const Uint8 GLES2_VertexSrc_Default_[] = " \
         float a_angle, \
         float2 a_center, \
         uniform float4x4 u_projection, \
-        float2 out v_position : POSITION, \
+        float4 out v_position : POSITION, \
         float2 out v_texCoord : TEXCOORD0 \
     ) { \
         float angle = radians(a_angle); \
         float c = cos(angle); \
         float s = sin(angle); \
         float2x2 rotationMatrix = float2x2(c, -s, s, c); \
-        float2 position = mul(rotationMatrix, (a_position - a_center)) + a_center; \
+        float2 position = mul((a_position - a_center), rotationMatrix) + a_center; \
         v_texCoord = a_texCoord; \
-        v_position = mul(u_projection, float4(position, 0.0, 1.0)); \
+        v_position = mul(float4(position, 0.0, 1.0), u_projection); \
     } \
 ";
 
 static const Uint8 GLES2_FragmentSrc_SolidSrc_[] = " \
-    float4 main(uniform float4 u_color) { \
+    float4 main(uniform float4 u_color) : COLOR { \
         return u_color; \
     } \
 ";
@@ -62,7 +62,7 @@ static const Uint8 GLES2_FragmentSrc_TextureABGRSrc_[] = " \
         float2 v_texCoord : TEXCOORD0, \
         uniform sampler2D u_texture, \
         uniform float4 u_modulation \
-    ) { \
+    ) : COLOR { \
         return tex2D(u_texture, v_texCoord) * u_modulation; \
     } \
 ";
@@ -73,9 +73,13 @@ static const Uint8 GLES2_FragmentSrc_TextureARGBSrc_[] = " \
         float2 v_texCoord : TEXCOORD0, \
         uniform sampler2D u_texture, \
         uniform float4 u_modulation \
-    ) { \
+    ) : COLOR { \
         float4 abgr = tex2D(u_texture, v_texCoord); \
-        return abgr.bgra * u_modulation; \
+        float4 tmp = abgr; \
+        tmp.r = abgr.b; \
+        tmp.b = abgr.r; \
+        tmp *= u_modulation; \
+        return tmp; \
     } \
 ";
 
@@ -85,10 +89,14 @@ static const Uint8 GLES2_FragmentSrc_TextureRGBSrc_[] = " \
         float2 v_texCoord : TEXCOORD0, \
         uniform sampler2D u_texture, \
         uniform float4 u_modulation \
-    ) { \
+    ) : COLOR { \
         float4 abgr = tex2D(u_texture, v_texCoord); \
-        abgr.a = 1.0; \
-        return abgr.bgra * u_modulation; \
+        float4 tmp = abgr; \
+        tmp.r = abgr.b; \
+        tmp.b = abgr.r; \
+        tmp.a = 1.0; \
+        tmp *= u_modulation; \
+        return tmp; \
     } \
 ";
 
@@ -98,10 +106,12 @@ static const Uint8 GLES2_FragmentSrc_TextureBGRSrc_[] = " \
         float2 v_texCoord : TEXCOORD0, \
         uniform sampler2D u_texture, \
         uniform float4 u_modulation \
-    ) { \
+    ) : COLOR { \
         float4 abgr = tex2D(u_texture, v_texCoord); \
-        abgr.a = 1.0; \
-        return abgr * u_modulation; \
+        float4 tmp = abgr; \
+        tmp.a = 1.0; \
+        tmp *= u_modulation; \
+        return tmp; \
     } \
 ";
 
@@ -140,7 +150,7 @@ static const Uint8 GLES2_FragmentSrc_TextureBGRSrc_[] = " \
 "    uniform sampler2D u_texture_u,\n"                          \
 "    uniform sampler2D u_texture_v,\n"                          \
 "    uniform vec4 u_modulation,\n"                              \
-") {\n"                                                         \
+") : COLOR {\n"                                                 \
 
 #define YUV_SHADER_BODY                                         \
 "    float3 yuv;\n"                                             \
@@ -153,7 +163,7 @@ static const Uint8 GLES2_FragmentSrc_TextureBGRSrc_[] = " \
 "\n"                                                            \
 "    // Do the color transform \n"                              \
 "    yuv += offset;\n"                                          \
-"    rgb = mul(matrix, yuv);\n"                                 \
+"    rgb = mul(yuv, matrix);\n"                                 \
 "\n"                                                            \
 "    // That was easy. :) \n"                                   \
 "    return float4(rgb, 1.0) * u_modulation;\n"                 \
@@ -169,7 +179,7 @@ static const Uint8 GLES2_FragmentSrc_TextureBGRSrc_[] = " \
 "\n"                                                            \
 "    // Do the color transform \n"                              \
 "    yuv += offset;\n"                                          \
-"    rgb = mul(matrix, yuv);\n"                                 \
+"    rgb = mul(yuv, matrix);\n"                                 \
 "\n"                                                            \
 "    // That was easy. :) \n"                                   \
 "    return float4(rgb, 1.0) * u_modulation;\n"                 \
@@ -185,7 +195,7 @@ static const Uint8 GLES2_FragmentSrc_TextureBGRSrc_[] = " \
 "\n"                                                            \
 "    // Do the color transform \n"                              \
 "    yuv += offset;\n"                                          \
-"    rgb = mul(matrix, yuv);\n"                                 \
+"    rgb = mul(yuv, matrix);\n"                                 \
 "\n"                                                            \
 "    // That was easy. :) \n"                                   \
 "    return float4(rgb, 1.0) * u_modulation;\n"                 \
